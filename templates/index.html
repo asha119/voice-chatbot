@@ -2,13 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Professional Voice Chatbot</title>
+    <title>Voice Chatbot</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <style>
         body {
             margin: 0;
-            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-            background: #f2f4f7;
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -16,184 +17,180 @@
         }
 
         .chat-container {
-            width: 420px;
-            max-width: 95%;
+            width: 100%;
+            max-width: 420px;
+            height: 90vh;
             background: #ffffff;
-            border-radius: 12px;
-            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.12);
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             display: flex;
             flex-direction: column;
-            overflow: hidden;
         }
 
         .chat-header {
             padding: 15px;
+            background: #343541;
+            color: white;
             text-align: center;
-            font-weight: 600;
-            background: #0a3d62;
-            color: white;
-            font-size: 18px;
+            font-weight: bold;
         }
 
-        .chat-body {
-            height: 380px;
-            padding: 16px;
-            overflow-y: auto;
-            background: #eef1f4;
-        }
-
-        .user-message {
-            display: flex;
-            justify-content: flex-end;
-            margin-bottom: 12px;
-        }
-
-        .user-box {
-            background: #0a84ff;
-            color: white;
-            padding: 10px 14px;
-            border-radius: 10px 10px 0 10px;
-            max-width: 75%;
-            font-size: 15px;
-        }
-
-        .bot-message {
-            display: flex;
-            justify-content: flex-start;
-            margin-bottom: 12px;
-        }
-
-        .bot-box {
-            background: #ffffff;
-            color: #333;
-            padding: 10px 14px;
-            border-radius: 10px 10px 10px 0;
-            max-width: 75%;
-            font-size: 15px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-        }
-
-        .chat-input {
-            display: flex;
-            border-top: 1px solid #ccc;
-            background: white;
-            align-items: center;
-        }
-
-        .chat-input input {
+        .chat-box {
             flex: 1;
-            padding: 12px;
-            font-size: 15px;
-            border: none;
+            padding: 15px;
+            overflow-y: auto;
+        }
+
+        .message {
+            margin-bottom: 12px;
+            max-width: 80%;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .user {
+            background: #0b5cff;
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 2px;
+        }
+
+        .bot {
+            background: #e5e7eb;
+            color: #111;
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+        }
+
+        .chat-form {
+            display: flex;
+            padding: 10px;
+            border-top: 1px solid #ddd;
+            gap: 6px;
+        }
+
+        .chat-form input {
+            flex: 1;
+            padding: 10px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
             outline: none;
         }
 
-        .chat-input button {
-            padding: 0 16px;
-            border: none;
+        .chat-form button {
+            padding: 10px 14px;
+            background: #0b5cff;
             color: white;
-            font-size: 15px;
+            border: none;
+            border-radius: 5px;
             cursor: pointer;
-            height: 100%;
+            font-size: 16px;
         }
 
-        .mic-btn {
-            background: #28a745;
-            margin-right: 5px;
+        .chat-form button:hover {
+            background: #094acc;
         }
 
-        .send-btn {
-            background: #0a84ff;
-        }
-
-        button:hover {
-            opacity: 0.9;
+        footer {
+            text-align: center;
+            font-size: 11px;
+            color: #666;
+            padding: 5px;
         }
     </style>
 </head>
-
 <body>
 
 <div class="chat-container">
     <div class="chat-header">
-        Professional Voice Chatbot
+        Voice Chatbot
     </div>
 
-    <div class="chat-body" id="chatBody">
-        {% for msg in chat_history %}
-            {% if msg.type == 'user' %}
-                <div class="user-message">
-                    <div class="user-box">{{ msg.message }}</div>
-                </div>
-            {% else %}
-                <div class="bot-message">
-                    <div class="bot-box bot-reply">{{ msg.message }}</div>
-                </div>
-            {% endif %}
-        {% endfor %}
+    <div class="chat-box" id="chatBox">
+        {% if reply %}
+        <div class="message bot" id="latestBotReply">{{ reply }}</div>
+        {% endif %}
     </div>
 
-    <form method="POST" class="chat-input" id="chatForm">
-        <button type="button" class="mic-btn" onclick="startVoice()">🎤</button>
-        <input
-            type="text"
-            id="messageInput"
-            name="message"
-            placeholder="Type or speak your question..."
-            required
-        >
-        <button type="submit" class="send-btn">Send</button>
+    <form class="chat-form" method="POST" onsubmit="addUserMessage()">
+        <input type="text" name="message" id="userInput" placeholder="Type or speak..." required>
+        <button type="button" onclick="startVoice()">🎤</button>
+        <button type="submit">Send</button>
     </form>
+
+    <footer>
+        Invented by Asha Kiran (CSD Department)
+    </footer>
 </div>
 
 <script>
-    // Auto scroll to bottom
-    const chatBody = document.getElementById("chatBody");
-    chatBody.scrollTop = chatBody.scrollHeight;
+    const chatBox = document.getElementById("chatBox");
+    const input = document.getElementById("userInput");
 
-    // Speak only the latest bot reply once
-    const botReplies = document.querySelectorAll(".bot-reply");
-    if (botReplies.length > 0) {
-        const latestReply = botReplies[botReplies.length - 1].innerText;
-        const lastSpoken = sessionStorage.getItem("lastSpoken");
-
-        if (latestReply !== lastSpoken) {
-            window.speechSynthesis.cancel();
-            const speech = new SpeechSynthesisUtterance(latestReply);
-            speech.lang = "en-US";
-            window.speechSynthesis.speak(speech);
-            sessionStorage.setItem("lastSpoken", latestReply);
+    /* -------------------------
+       Add user message visually
+    --------------------------*/
+    function addUserMessage() {
+        if (input.value.trim() !== "") {
+            const userMsg = document.createElement("div");
+            userMsg.className = "message user";
+            userMsg.textContent = input.value;
+            chatBox.appendChild(userMsg);
         }
+        setTimeout(scrollBottom, 100);
     }
 
-    // Voice input → auto send
+    function scrollBottom() {
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    /* -------------------------
+       VOICE INPUT
+    --------------------------*/
     function startVoice() {
-        if (!("webkitSpeechRecognition" in window)) {
-            alert("Voice recognition not supported in this browser.");
+        if (!('webkitSpeechRecognition' in window)) {
+            alert("Voice input not supported in this browser.");
             return;
         }
 
         const recognition = new webkitSpeechRecognition();
         recognition.lang = "en-US";
-        recognition.start();
+        recognition.continuous = false;
+        recognition.interimResults = false;
 
-        recognition.onresult = function (event) {
-            const text = event.results[0][0].transcript;
-            document.getElementById("messageInput").value = text;
+        recognition.onresult = function(event) {
+            const speechText = event.results[0][0].transcript;
+            input.value = speechText;
 
-            setTimeout(() => {
-                document.getElementById("chatForm").submit();
-            }, 300);
+            // auto-submit after speaking
+            addUserMessage();
+            document.querySelector(".chat-form").submit();
         };
+
+        recognition.start();
     }
 
-    // Clear chat when tab closes
-    window.addEventListener("beforeunload", function () {
-        navigator.sendBeacon("/clear");
-        sessionStorage.removeItem("lastSpoken");
-    });
+    /* -------------------------
+       VOICE OUTPUT (latest only)
+    --------------------------*/
+    window.onload = function () {
+        const latestReply = document.getElementById("latestBotReply");
+        if (latestReply) {
+            speak(latestReply.innerText);
+            scrollBottom();
+        }
+    };
+
+    function speak(text) {
+        window.speechSynthesis.cancel(); // stop old speech
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = "en-US";
+        window.speechSynthesis.speak(utterance);
+    }
 </script>
 
 </body>
 </html>
-
