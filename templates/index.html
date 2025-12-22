@@ -130,9 +130,10 @@
     const chatBox = document.getElementById("chatBox");
     const input = document.getElementById("userInput");
 
-    /* -------------------------
-       Add user message visually
-    --------------------------*/
+    function scrollBottom() {
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
     function addUserMessage() {
         if (input.value.trim() !== "") {
             const userMsg = document.createElement("div");
@@ -143,29 +144,19 @@
         setTimeout(scrollBottom, 100);
     }
 
-    function scrollBottom() {
-        chatBox.scrollTop = chatBox.scrollHeight;
-    }
-
-    /* -------------------------
-       VOICE INPUT
-    --------------------------*/
+    /* ---------- VOICE INPUT ---------- */
     function startVoice() {
         if (!('webkitSpeechRecognition' in window)) {
-            alert("Voice input not supported in this browser.");
+            alert("Voice input not supported.");
             return;
         }
 
         const recognition = new webkitSpeechRecognition();
         recognition.lang = "en-US";
         recognition.continuous = false;
-        recognition.interimResults = false;
 
         recognition.onresult = function(event) {
-            const speechText = event.results[0][0].transcript;
-            input.value = speechText;
-
-            // auto-submit after speaking
+            input.value = event.results[0][0].transcript;
             addUserMessage();
             document.querySelector(".chat-form").submit();
         };
@@ -173,24 +164,28 @@
         recognition.start();
     }
 
-    /* -------------------------
-       VOICE OUTPUT (latest only)
-    --------------------------*/
-    window.onload = function () {
+    /* ---------- VOICE OUTPUT (FIXED) ---------- */
+    document.addEventListener("DOMContentLoaded", () => {
         const latestReply = document.getElementById("latestBotReply");
+
         if (latestReply) {
-            speak(latestReply.innerText);
-            scrollBottom();
+            setTimeout(() => {
+                speak(latestReply.innerText);
+                scrollBottom();
+            }, 300); // delay fixes first-time issue
         }
-    };
+    });
 
     function speak(text) {
-        window.speechSynthesis.cancel(); // stop old speech
+        if (!window.speechSynthesis) return;
+
+        window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = "en-US";
         window.speechSynthesis.speak(utterance);
     }
 </script>
+
 
 </body>
 </html>

@@ -23,6 +23,9 @@ responses = {
     "what is your purpose": [
         "My purpose is to assist users with friendly and professional responses.",
         "I was created to help and interact with people in a simple way."
+    ],
+    "hlo": [
+        "hi! im here to help you."
     ]
 }
 
