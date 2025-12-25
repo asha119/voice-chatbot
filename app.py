@@ -1,40 +1,58 @@
 from flask import Flask, render_template, request, jsonify
-import os
+import random
+import openai
 
 app = Flask(__name__)
 
-def chatbot_response(user_msg):
-    msg = user_msg.lower()
+# -------------------------
+# OPENAI API KEY (TEMP)
+# -------------------------
+openai.api_key = "PASTE_YOUR_API_KEY_HERE"
 
-    if "who created you" in msg or "who invented you" in msg:
-        return "I was invented by Asha Kiran from the CSD department."
-    elif "purpose" in msg:
-        return "My purpose is to assist users in a friendly and professional manner."
-    elif msg in ["hi", "hello", "hlo", "hey"]:
-        return "Hello! How can I help you today?"
-    elif msg in ["bye","ok","done"]:
-        return "ok! thank you for approaching me"
-    elif "gyan fest" in msg:
-        return "As per college notification 'GYAN-2k25' is conducting on 26th&27th every student participation is mandatory"
-    elif "college timings" in msg:
-        return "As per college notification college timings are 9:00AM-4:30PM"
-    elif "this project" in msg:
-        return "The Voice-Enabled AI Chatbot is a web-based application developed to assist students by providing instant answers to academic and administrative queries through both text and voice interaction. The system is designed with a professional and mobile-friendly interface, enabling users to ask questions easily and receive responses in real time. It supports features such as multiple responses for the same question, voice input and output, and dynamic interaction for better user experience. The chatbot allows an admin to update or modify questions and answers at any time, ensuring the information remains accurate and up to date. The project is implemented using HTML, CSS, and JavaScript for the frontend, Python with Flask for backend logic, GitHub for version control, and Render for online hosting and accessibility. Overall, the chatbot improves accessibility to information, saves time for students, and provides an efficient digital solution for handling common college-related queries."
-    
-    else:
-        return "Thank you for your message. I am still learning and will improve over time."
+# -------------------------
+# Predefined Q&A (Hybrid)
+# -------------------------
+qa_data = {
+    "hi": ["Hello! How can I help you today? 😊"],
+    "who created you": ["I was created by Asha Kiran from the CSD Department."],
+    "what is your purpose": ["My purpose is to assist students with instant information."],
+}
 
-@app.route("/")
-def home():
+# -------------------------
+# Home Route
+# -------------------------
+@app.route("/", methods=["GET", "POST"])
+def index():
+    if request.method == "POST":
+        user_msg = request.form.get("message", "").lower()
+
+        # 1️⃣ Check predefined answers first
+        for q in qa_data:
+            if q in user_msg:
+                return jsonify({"reply": random.choice(qa_data[q])})
+
+        # 2️⃣ Else → Use AI API
+        try:
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": "system", "content": "You are a helpful student assistant."},
+                    {"role": "user", "content": user_msg}
+                ],
+                max_tokens=150
+            )
+
+            ai_reply = response.choices[0].message["content"]
+            return jsonify({"reply": ai_reply})
+
+        except Exception as e:
+            return jsonify({"reply": "AI service is temporarily unavailable."})
+
     return render_template("index.html")
 
-@app.route("/chat", methods=["POST"])
-def chat():
-    data = request.get_json()
-    user_msg = data.get("message", "")
-    reply = chatbot_response(user_msg)
-    return jsonify({"reply": reply})
 
+# -------------------------
+# Run App
+# -------------------------
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(debug=True)

@@ -1,166 +1,139 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Voice Chatbot</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <title>Voice Enabled AI Chatbot</title>
 
-<style>
-body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: #f4f6f8;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-}
-.chat-container {
-    width: 100%;
-    max-width: 420px;
-    height: 90vh;
-    background: #fff;
-    border-radius: 10px;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-}
-.chat-header {
-    padding: 15px;
-    background: #343541;
-    color: white;
-    text-align: center;
-    font-weight: bold;
-}
-.chat-box {
-    flex: 1;
-    padding: 15px;
-    overflow-y: auto;
-}
-.message {
-    margin-bottom: 10px;
-    padding: 10px;
-    border-radius: 8px;
-    max-width: 80%;
-}
-.user {
-    background: #0b5cff;
-    color: white;
-    align-self: flex-end;
-}
-.bot {
-    background: #e5e7eb;
-    color: black;
-    align-self: flex-start;
-}
-.chat-form {
-    display: flex;
-    padding: 10px;
-    gap: 6px;
-    border-top: 1px solid #ddd;
-}
-.chat-form input {
-    flex: 1;
-    padding: 10px;
-}
-.chat-form button {
-    padding: 10px;
-    cursor: pointer;
-}
-footer {
-    text-align: center;
-    font-size: 11px;
-    padding: 5px;
-    color: #555;
-}
-</style>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .chat-container {
+            width: 420px;
+            background: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            padding: 15px;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        #chat-box {
+            height: 300px;
+            border: 1px solid #ddd;
+            padding: 10px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+        }
+
+        .user {
+            text-align: right;
+            color: #0b5ed7;
+            margin: 5px 0;
+        }
+
+        .bot {
+            text-align: left;
+            color: #198754;
+            margin: 5px 0;
+        }
+
+        input {
+            width: 75%;
+            padding: 8px;
+        }
+
+        button {
+            padding: 8px 12px;
+            margin-left: 5px;
+            cursor: pointer;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
 </head>
 
 <body>
+
 <div class="chat-container">
-    <div class="chat-header">Voice Chatbot</div>
+    <h2>🎤 Voice Chatbot</h2>
 
-    <div class="chat-box" id="chatBox"></div>
+    <div id="chat-box"></div>
 
-    <div class="chat-form">
-        <input type="text" id="userInput" placeholder="Type or speak...">
-        <button onclick="startVoice()">🎤</button>
+    <div class="controls">
+        <input type="text" id="user-input" placeholder="Ask your question..." />
         <button onclick="sendMessage()">Send</button>
+        <button onclick="startVoice()">🎙️</button>
     </div>
-
-    <footer>Invented by Asha Kiran (CSD Department)</footer>
 </div>
 
 <script>
-const chatBox = document.getElementById("chatBox");
-const input = document.getElementById("userInput");
+    let chatBox = document.getElementById("chat-box");
 
-let audioUnlocked = false;
-
-/* 🔓 Unlock audio for mobile Chrome */
-function unlockAudio() {
-    if (!audioUnlocked) {
-        const silent = new SpeechSynthesisUtterance("");
-        speechSynthesis.speak(silent);
-        audioUnlocked = true;
-    }
-}
-
-function addMessage(text, sender) {
-    const div = document.createElement("div");
-    div.className = "message " + sender;
-    div.textContent = text;
-    chatBox.appendChild(div);
-    chatBox.scrollTop = chatBox.scrollHeight;
-}
-
-function speak(text) {
-    if (!audioUnlocked) return;
-
-    speechSynthesis.cancel();
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = "en-US";
-    speechSynthesis.speak(utter);
-}
-
-function sendMessage() {
-    const msg = input.value.trim();
-    if (!msg) return;
-
-    addMessage(msg, "user");
-    input.value = "";
-
-    fetch("/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: msg })
-    })
-    .then(res => res.json())
-    .then(data => {
-        addMessage(data.reply, "bot");
-        speak(data.reply); // 🔊 speaks latest reply
-    });
-}
-
-function startVoice() {
-    unlockAudio(); // required for mobile
-
-    if (!('webkitSpeechRecognition' in window)) {
-        alert("Voice input not supported in this browser.");
-        return;
+    function addMessage(sender, text) {
+        let msg = document.createElement("div");
+        msg.className = sender;
+        msg.innerText = text;
+        chatBox.appendChild(msg);
+        chatBox.scrollTop = chatBox.scrollHeight;
     }
 
-    const recog = new webkitSpeechRecognition();
-    recog.lang = "en-US";
-    recog.continuous = false;
+    function speak(text) {
+        window.speechSynthesis.cancel(); // stop old speech
+        let speech = new SpeechSynthesisUtterance(text);
+        speech.lang = "en-US";
+        window.speechSynthesis.speak(speech);
+    }
 
-    recog.onresult = e => {
-        input.value = e.results[0][0].transcript;
-        sendMessage();
-    };
+    function sendMessage() {
+        let input = document.getElementById("user-input");
+        let message = input.value.trim();
+        if (message === "") return;
 
-    recog.start();
-}
+        addMessage("user", "You: " + message);
+        input.value = "";
+
+        fetch("/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            body: "message=" + encodeURIComponent(message)
+        })
+        .then(res => res.json())
+        .then(data => {
+            addMessage("bot", "Bot: " + data.reply);
+            speak(data.reply);   // speak latest reply
+        })
+        .catch(() => {
+            addMessage("bot", "Bot: Server error");
+        });
+    }
+
+    function startVoice() {
+        let recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = "en-US";
+
+        recognition.onresult = function(event) {
+            let voiceText = event.results[0][0].transcript;
+            document.getElementById("user-input").value = voiceText;
+            sendMessage();   // auto-send
+        };
+
+        recognition.start();
+    }
 </script>
 
 </body>
